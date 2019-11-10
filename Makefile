@@ -6,7 +6,7 @@ CFLAGS = $(INCLUDE)
 
 OBJECTS = URLException.o URL.o
 
-all: main oauth
+all: main oauth stream download
 
 clean:
 	rm -f *.o
@@ -25,8 +25,22 @@ main.o: main.cc
 oauth.o: oauth.cc
 	$(CXX) -c oauth.cc $(CFLAGS)
 	
+stream.o: stream.cc
+	$(CXX) -c stream.cc $(CFLAGS)
+	
 main: main.o $(OBJECTS)
 	$(CXX) -o main main.o $(OBJECTS) $(LIBS)
 	
 oauth: oauth.o $(OBJECTS)
 	$(CXX) -o oauth oauth.o $(OBJECTS) $(LIBS)
+	
+stream: stream.o $(OBJECTS)
+	$(CXX) -o stream stream.o $(OBJECTS) $(LIBS)
+	
+		
+			
+download.o: download.cc
+	$(CXX) -c download.cc $(CFLAGS)
+		
+download: download.o $(OBJECTS)
+	$(CXX) -o download download.o $(OBJECTS) $(LIBS)

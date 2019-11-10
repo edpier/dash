@@ -52,6 +52,11 @@ URL::URL() {
     error_msg[0] = '\0'; // just in case;
     setOpt(CURLOPT_ERRORBUFFER, error_msg);
     
+    /*****************
+    * custom headers *
+    *****************/
+    headers = NULL;
+    
     
     /************
     * callbacks *
@@ -104,11 +109,51 @@ void URL::addQueryElement(const std::string& key, const std::string value) {
     query.push_back(elem);
     
 } // end of addQueryElement
+    
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::setQueryElement(const std::string& key, const std::string value) {
+    
+    for(Query::iterator it = query.begin(); it != query.end(); ++it) {
+        
+        QueryElement& elem = *it;
+        
+        if(elem.first == key) {
+            /***********
+            * found it *
+            ***********/
+            elem.second = value;
+            return;
+        }
+        
+        
+    } // end of loop over existing query elements 
+    
+    /****************************************************
+    * if we get here we do not already have the element *
+    ****************************************************/
+    QueryElement elem;
+    escape(key,   elem.first );
+    escape(value, elem.second);
+    
+    query.push_back(elem);
+    
+} // end of addQueryElement
 
 /*********************************************************************************//**
 *
 *************************************************************************************/
 void URL::clearQuery() { query.clear(); }
+
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::addHeader(const std::string& key, const std::string& value) {
+    
+    headers = curl_slist_append(headers, (key+": "+value).c_str());
+    
+} // end of addHeader method
 
 /*********************************************************************************//**
 *
@@ -206,6 +251,55 @@ void URL::post() {
     perform();
     
 } // end of post method
+        
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::post(const std::string& data) {
+    
+    /******************************************
+    * assemble the URL without the query data *
+    ******************************************/
+    std::string url;
+    toString(url);
+    
+    setOpt(CURLOPT_URL, const_cast<char*>(url.c_str()));
+    setOpt(CURLOPT_POSTFIELDS, data.c_str());
+    
+    perform();
+    
+} // end of post method
+
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::postJSON(const Json::Value& json) {
+    
+    addHeader("Content-Type", "application/json");
+    
+    std::ostringstream s;
+    s << json;
+    
+    post(s.str());
+    
+} // end of post method
+
+    
+/*********************************************************************************//**
+* @brief Make an HTTP DELETE call
+*************************************************************************************/
+void URL::del() {
+    
+    std::string url;
+    toString(url);
+    
+    setOpt(CURLOPT_URL, const_cast<char*>(url.c_str()));
+    setOpt(CURLOPT_CUSTOMREQUEST, "DELETE");
+    
+    perform();
+    
+} // end of del method
+
 
 /*********************************************************************************//**
 *
@@ -215,6 +309,18 @@ const std::string& URL::getBody() const {
     return body; 
     
 } // end of getBody method
+
+/*********************************************************************************//**
+*
+*************************************************************************************/
+const Json::Value& URL::getJSONBody() const {
+    
+    std::istringstream s(body);
+    s >> json_body;
+    
+    return json_body;
+    
+} // end of getJSONBody method
     
 /*********************************************************************************//**
 *
@@ -247,8 +353,21 @@ void URL::setOpt(CURLoption option, const void* parameter) {
 *************************************************************************************/
 void URL::perform() {
     
+    /**********************************
+    * clear out any old response body *
+    **********************************/
     body.clear();
     
+    /*************************************
+    * set custom headers, if we have any *
+    *************************************/
+    if(headers != NULL) {
+        setOpt(CURLOPT_HTTPHEADER, headers);
+    }
+    
+    /********
+    * do it *
+    ********/
     CURLcode status = curl_easy_perform(conn);
     if(status != CURLE_OK) {
         std::string msg = "Error: ";
@@ -264,10 +383,8 @@ void URL::perform() {
 *************************************************************************************/
 void URL::headerData(char *ptr, size_t size, size_t nmemb) {
     
-    std::cout << "header data"<<std::endl;
-    std::cout << "size="<<size<<std::endl;
+    std::cout << "HEAD "<<ptr;
     
-    std::cout << ptr<<std::endl;
 } // end of headerData callback method
 
     
@@ -275,11 +392,6 @@ void URL::headerData(char *ptr, size_t size, size_t nmemb) {
 *
 *************************************************************************************/
 void URL::bodyData(char *ptr, size_t size, size_t nmemb) {
-    
-//     std::cout << "body data"<<std::endl;
-//     std::cout << "size="<<size<<std::endl;
-//     
-//     std::cout << ptr<<std::endl;
     
     body += ptr;
     
@@ -319,4 +431,97 @@ bool URL::isUnreserved(char c) {
            c == '-' || c == '_' || c == '.' || c == '~';
     
 } // end of isUnreserved static method
+    
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::unescape(const std::string& orig, std::string& unescaped) {
+    
+    unescaped.clear();
+    
+    int offset=0;
+    while(offset<orig.length()) {
+        
+        char c = orig[offset++];
+        if(c == '%') {
+            /******************
+            * escape sequence *
+            ******************/
+            if(offset+1>=orig.length()) {
+                throw URLException("Truncated escape sequence");
+            }
+            
+            
+            std::istringstream in(orig.substr(offset, 2));
+            
+            int value;
+            in >> std::hex >> value;
+            c = value;
+            
+            //std::cout << "hex: "<<orig.substr(offset, 2)<<" "<<value<<" "<<c<<std::endl;
+            
+            offset += 2;
+            
+            
+        } // end if it wa an escape sequence
+        
+        /*******************
+        copy the character *
+        *******************/
+        unescaped += c;
+
+        
+        
+    } // end of loop over characters
+    
+} // end of unescape method
+    
+/*********************************************************************************//**
+*
+*************************************************************************************/
+void URL::decode(const std::string& string, std::map<std::string, std::string>& map) {
+    
+    map.clear();
+    
+    size_t pos=0;
+    while(true) {
+        /****************************
+        * find the next & separator *
+        ****************************/
+        size_t end = string.find('&', pos);
+        
+        /*****************************************
+        * pull out the current &-separated field *
+        *****************************************/
+        std::string field;
+        if(end == std::string::npos) {
+            /*************************
+            * this is the last field *
+            *************************/
+            field = string.substr(pos);
+            break;
+            
+        } else {
+            /*********************
+            * pull out the field *
+            *********************/
+            field = string.substr(pos, end-pos);
+            pos = end+1;
+        }
+        
+        /*************************
+        * pull out the key=value *
+        *************************/
+        size_t equals = field.find('=');
+        std::string key = field.substr(0, equals);
+        
+        std::string value;
+        unescape(field.substr(equals+1), value);
+        
+        map[key] = value;
+
+
+    } // end of loop over fields
+    
+} //end of decode method
     
