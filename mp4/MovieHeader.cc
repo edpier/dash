@@ -28,7 +28,7 @@ MovieHeader::MovieHeader()
     uint64_t time = now();
     setCreationTime(time);
     setModificationTime(time);
-    setTimescale(9000);
+    setTimescale(90000);
     setDuration(0);
     
     next_track_id = 2;

@@ -236,17 +236,21 @@ void DashEncoder::createFragment() {
     
     fragment = new Container("    ");
     
+    /***************
+    * magic number *
+    ***************/
     SegmentType* styp = new SegmentType();
     styp->set("dash", 0);
     styp->add("iso6");
     styp->add("avc1");
     styp->add("mp41");
+    fragment->add(styp);
     
-    Box* box = new Box();
-    box->setContents(styp);
-    fragment->add(box);
-    
+    /***********
+    * metadata *
+    ***********/
     Container* moof = new Container("moof");
+    fragment->add(moof);
     
     MovieFragmentHeader* mfhd = new MovieFragmentHeader();
     mfhd->setSequenceNumber(fragment_count++);
@@ -267,15 +271,14 @@ void DashEncoder::createFragment() {
     
     TrackFragmentRun* trun = new TrackFragmentRun();
     traf->add(trun);
-    
+
+    /*************
+    * movie data *
+    *************/
     MovieData* mdat = new MovieData();
     fragment->add(mdat);
     
-    box = new Box();
-    box->setContents(moof);
-    fragment->add(box);
-    
-} // end of createChunk method
+} // end of createFragment method
       
 /************************************************************************//**
 *

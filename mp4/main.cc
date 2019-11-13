@@ -17,12 +17,14 @@ int main(int argc, char** argv) {
     
     //StreamByteSource source(new std::ifstream("/home/epier/git/dash/out.mp4"));
      
-    StreamByteSource source(new std::ifstream("../z3_init.mp4"));
+    //StreamByteSource source(new std::ifstream("../z3_init.mp4"));
     //StreamByteSource source(new std::ifstream("../z3_seg1.mp4"));
     //StreamByteSource source(new std::ifstream("../z3_seg2.mp4"));
     
     //StreamByteSource source(new std::ifstream("dash/init.mp4"));
     //StreamByteSource source(new std::ifstream("dash/fragment000001.mp4"));
+    //StreamByteSource source(new std::ifstream("/home/epier/pubvipa/out3.mp4"));
+    StreamByteSource source(new std::ifstream("/home/epier/git/vipa/out3.mp4"));
     
     Container all("    ");
     while(source.getRemaining()>0) {

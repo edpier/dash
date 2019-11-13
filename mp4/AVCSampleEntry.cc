@@ -13,7 +13,7 @@ AVCSampleEntry::AVCSampleEntry()
     
     data_reference_index = 1;
     
-    width = 0;
+    width  = 0;
     height = 0;
     
     horizresolution = 0x00480000; // 72 dpi

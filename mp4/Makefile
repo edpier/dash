@@ -19,7 +19,8 @@ OBJECTS = Box.o ByteSource.o StreamByteSource.o Type.o Contents.o \
           EventMessage.o SegmentType.o TrackFragmentDecodeTime.o ItemList.o \
           AVCSampleEntry.o AVCConfiguration.o ParameterSet.o BitRate.o \
           InitialObjectDescriptor.o ArrayByteSource.o NALUUnescaper.o BitSource.o \
-          NALU.o NALUContents.o SPS.o DashEncoder.o MovieData.o DataChunk.o
+          NALU.o NALUContents.o SPS.o DashEncoder.o MovieData.o DataChunk.o \
+          SampleTable.o
           
 CFLAGS = -g -Wall -Werror
 

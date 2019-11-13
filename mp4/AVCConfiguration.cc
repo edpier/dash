@@ -134,10 +134,12 @@ void AVCConfiguration::read(ByteSource& source) {
     }    
     
     std::cout << "AVCProfileIndication="<<(int)AVCProfileIndication<<std::endl;
-    if(AVCProfileIndication == 100 ||
+    std::cout << "remaining = "<<source.getRemaining()<<std::endl;
+    if(source.getRemaining() &&
+       (AVCProfileIndication == 100 ||
        AVCProfileIndication == 110 ||
        AVCProfileIndication == 122 ||
-       AVCProfileIndication == 144   ) {
+       AVCProfileIndication == 144   )) {
         
         uint8_t tmp = source.readUint8();
         chroma_format = tmp & 3;

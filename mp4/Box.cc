@@ -17,11 +17,13 @@
 #include "ItemList.h"
 #include "MediaHeader.h"
 #include "Meta.h"
+#include "MovieData.h"
 #include "MovieFragmentHeader.h"
 #include "MovieHeader.h"
 #include "MP4Exception.h"
 #include "SampleDescription.h"
 #include "SampleSize.h"
+#include "SampleTable.h"
 #include "SampleToChunk.h"
 #include "SegmentType.h"
 #include "SkipContents.h"
@@ -35,7 +37,6 @@
 #include "TrackFragmentRun.h"
 #include "TrackHeader.h"
 #include "VideoMediaHeader.h"
-
 
 /**************************************************************************//**
 *
@@ -137,7 +138,6 @@ void Box::read(ByteSource& source) {
         contents = new Container(type);
         
     } else if(type_string == "mp4a" ||
-              type_string == "mdat" ||
               type_string == "free" ||
               type_string == "skip"   ) {
         /*******
@@ -175,6 +175,9 @@ void Box::read(ByteSource& source) {
     else if(type_string == "avcC") contents = new AVCConfiguration();
     else if(type_string == "btrt") contents = new BitRate();
     else if(type_string == "iods") contents = new InitialObjectDescriptor();
+    else if(type_string == "ctts") contents = new SampleTable();
+    else if(type_string == "mdat") contents = new MovieData();
+    
     else {
         throw MP4Exception("unsupported type ");
     }

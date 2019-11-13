@@ -27,7 +27,7 @@ ParameterSet::~ParameterSet() {
 ******************************************************************************/
 void ParameterSet::setSize(uint16_t size) {
     
-    std::cout << "size="<<size<<std::endl;
+    std::cout << "parameter set size="<<size<<std::endl;
     
     this->size = size;
     data = new uint8_t[size];

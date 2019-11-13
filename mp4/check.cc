@@ -5,7 +5,8 @@
 
 int main(int argc, char** argv) {
     
-    StreamByteSource source(new std::ifstream("out2.mp4"));
+    StreamByteSource source(new std::ifstream("dash/all.mp4"));
+    //StreamByteSource source(new std::ifstream("../all.mp4"));
     
     Box box;
     while(true) {
