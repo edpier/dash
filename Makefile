@@ -2,7 +2,7 @@ CXX = g++
 
 LIBS = -lcurl -ljsoncpp
 INCLUDE = -I/usr/include/jsoncpp
-CFLAGS = $(INCLUDE)
+CFLAGS = $(INCLUDE -std=c++11)
 
 OBJECTS = URLException.o URL.o
 
